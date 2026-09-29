@@ -1,0 +1,39 @@
+# Build output
+build/
+run/
+run-data/
+run-data-*/
+.gradle/
+
+# Remapping pipeline inputs and intermediates.
+#
+# tools/mappings/ is deliberately excluded: Mojang's client mappings carry an explicit
+# "you may not redistribute the mappings complete and unmodified" notice. tools/README.md
+# documents how to download everything in there.
+#
+# tools/libs/ holds third-party jars (tiny-remapper, ForgeAutoRenamingTool, the Minecraft
+# client jar) that are fetched by URL, not vendored.
+tools/libs/
+tools/mappings/
+tools/yarn/
+tools/java/out/
+
+# Remapping outputs. src/main/java is derived from these, so the derived sources are
+# the ones that are tracked.
+decompiled/
+remapped/
+remapped-mojang.jar
+stage1-obf.jar
+s1/
+s2/
+s3/
+s4/
+s5/
+scan/
+verify/
+
+# Logs
+*.log
+*.err
+server-run.*
+server-final.*
