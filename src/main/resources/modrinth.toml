@@ -1,6 +1,6 @@
 # Modrinth project manifest, embedded in the jar so Modrinth can prefill metadata on import.
 # https://docs.modrinth.com/docs/publishing#modrinthtoml
-projectId = "placeholderapi"
+projectId = "LAI0rUqg"
 name = "Text Placeholder API (Unofficial Forge Port)"
 version = "${version}"
 summary = "Unofficial community port of Text Placeholder API to Forge 1.20.1. Not made or endorsed by the original author."
