@@ -1,0 +1,19 @@
+pluginManagement {
+    repositories {
+        maven { url = 'https://maven.neoforged.net/releases' }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    // ModDevGradle resolves the NeoForge artifacts through its own configurations, which do not
+    // see the project-level repositories block. Declaring the maven here is what makes FML,
+    // earlydisplay and neoform resolvable.
+    repositories {
+        maven { url = 'https://maven.neoforged.net/releases' }
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'PlaceholderAPI-NeoForge-26.1.2'

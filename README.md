@@ -1,10 +1,10 @@
-# Text Placeholder API — Forge port (unofficial)
+# Text Placeholder API — Forge / NeoForge port (unofficial)
 
 > [!IMPORTANT]
 > **This is an unofficial port.** It is not made, endorsed, or supported by the original author
 > (Patbox). It is a community port of the Fabric-only
-> [Text Placeholder API](https://modrinth.com/mod/placeholder-api) to Minecraft 1.20.1 Forge, done
-> to make the library available on the Forge loader.
+> [Text Placeholder API](https://modrinth.com/mod/placeholder-api) to the Forge and NeoForge
+> loaders, done to make the library available outside Fabric.
 >
 > For the official Fabric version, bug reports about the original library, and the canonical
 > documentation, go to the original project:
@@ -12,15 +12,35 @@
 >
 > This port tracks the original `2.1.4` release. Bug reports about placeholder behaviour itself
 > are best filed against the upstream project; this repository is the place for problems specific
-> to the Forge port.
+> to the ports.
+
+## Supported versions
+
+Each target is a self-contained Gradle project so that the build stays as close to the vanilla
+toolchain as possible.
+
+| Minecraft | Loader | Project directory | Build | Runtime check |
+| --- | --- | --- | --- | --- |
+| 1.20.1 | Forge 47.x (47.4.10) | `.` (repo root) | ForgeGradle 6 | server reached `Done` |
+| 1.21.1 | NeoForge 21.1.x (21.1.252) | [`port-1.21.1-neoforge/`](port-1.21.1-neoforge) | ModDevGradle 2.0.148, JDK 21 | server reached `Done` |
+| 26.1.2 | NeoForge 26.1.2.x (26.1.2.112) | [`port-26.1.2-neoforge/`](port-26.1.2-neoforge) | ModDevGradle 2.0.148, JDK 25 | server reached `Done` |
+
+All three register the same 59 built-in placeholders at load time, and all three were verified by
+booting a dedicated server and confirming the registry and parser work.
+
+Toolchain notes, if you are porting further:
+
+* 1.21.1+ uses **ModDevGradle**, not ForgeGradle.
+* NeoForge requires the metadata file to be named `META-INF/neoforge.mods.toml`. With
+  `META-INF/mods.toml` the loader silently refuses to see the mod.
+* 26.1.2 requires a **Java 25** toolchain; 1.21.1 is fine on 17 or 21.
 
 | | |
 | --- | --- |
-| Minecraft | 1.20.1 |
-| Loader | Forge 47.x (built against 47.4.10) |
 | Mod id | `placeholderapi` (original: `placeholder-api`) |
 | Upstream version | 2.1.4 |
 | Licence | LGPL-3.0-only, same as upstream |
+
 
 ---
 
@@ -73,25 +93,37 @@ The Java API is a faithful port. The `eu.pb4.placeholders` package, every public
 placeholder id (`%player%`, `%server%`, `%world%`, ...) are unchanged, so mods written against the
 original library work on Forge without modification. The differences are loader plumbing only:
 
-| Original (Fabric) | This port (Forge) |
+| Original (Fabric) | This port (Forge / NeoForge) |
 | --- | --- |
-| `net.fabricmc.loader.api.FabricLoader` | `eu.pb4.placeholders.impl.ForgePlatform` over `net.minecraftforge.fml.ModList` |
-| `FabricLoader#isDevelopmentEnvironment()` | `FMLLoader.isProduction()` |
+| `net.fabricmc.loader.api.FabricLoader` | `eu.pb4.placeholders.impl.ForgePlatform` over `ModList` |
+| `FabricLoader#isDevelopmentEnvironment()` | `FMLLoader.isProduction()` on 1.20.1, `FMLEnvironment.isProduction()` on 26.1.2 |
 | `getModContainer(id).getMetadata().getVersion()` / `getName()` / `getDescription()` | `ModList.getModContainerById(id).getModInfo()` (`IModInfo`) |
 | `getAllMods().size()` | `ModList.get().getMods().size()` |
-| Minecraft version read from the loader's mod metadata | `SharedConstants.getCurrentVersion().getId()` |
-| `fabric.mod.json` | `META-INF/mods.toml` |
+| Minecraft version read from the loader's mod metadata | `SharedConstants.getCurrentVersion().getId()`, `DetectedVersion.tryDetectVersion().name()` on 26.1.2 |
+| `fabric.mod.json` | `META-INF/mods.toml` (Forge), `META-INF/neoforge.mods.toml` (NeoForge) |
 | mod id `placeholder-api` | mod id `placeholderapi` |
 
 All loader-specific logic is isolated in `eu.pb4.placeholders.impl.ForgePlatform`, so porting back
 to another loader means swapping that one class.
 
-Two places needed more than a rename:
+Beyond that, the three targets diverge where Mojang's own API diverged. The changes that are not
+mechanical renames:
 
-- **`HoverNode#applyFormatting`** — `HoverEvent`'s constructor is generic over the action payload,
-  so the payload is pinned down per branch instead of being passed as the node's own `T`.
-- **`GeneralUtils`** — the legacy-translation flag now compares version strings instead of using
-  Fabric's `Version` type.
+- **`HoverNode#applyFormatting`** — `HoverEvent` is generic over the action payload on 1.20.1, and
+  by 26.1.2 it is a sealed interface with one record per action (`ShowText`, `ShowItem`,
+  `ShowEntity`, the last wrapping a new `ItemStackTemplate`). The payload is therefore chosen per
+  branch on every target.
+- **`ClickEvent`** — a single `(Action, String)` record on 1.20.1, a sealed interface with one
+  record per action by 26.1.2, where payloads are typed (`URI`, `int`, a registry holder). Both
+  directions go through `GeneralUtils.createClickEvent` / `clickEventValue`.
+- **`GeneralUtils`** — the legacy-translation flag compares version strings rather than using
+  Fabric's `Version` type, and the tag parser is fed a registry lookup because 26.1 requires a
+  `HolderLookup.Provider` for several serialisation entry points.
+- **Text contents** — the `nbt` and `selector` node payloads, and the block/entity data sources,
+  became `CompilableString` in 26.1, and `TagParser#parseTag` and `ItemStack#parse` are gone. The
+  node records keep their original `String` shape and compile on the way out, so the public API is
+  unchanged.
+
 
 ## How the port was produced
 
@@ -118,13 +150,20 @@ Fabric publish complete mappings for. `--record-fix` restores record accessors s
 
 ## Building
 
-Requires a JDK 17 toolchain; Gradle provisions one if needed.
+Each project directory builds independently and produces the same-shaped artifacts.
 
 ```bash
-./gradlew build          # jar + sources jar land in build/libs/
-./gradlew runClient      # dev client
-./gradlew runServer      # dev dedicated server
+# 1.20.1 Forge  (this directory)      - needs a JDK 17 toolchain
+./gradlew build && ./gradlew runServer
+
+# 1.21.1 NeoForge
+cd port-1.21.1-neoforge && ./gradlew build && ./gradlew runServer
+
+# 26.1.2 NeoForge                     - needs a JDK 25 toolchain
+cd port-26.1.2-neoforge && ./gradlew build && ./gradlew runServer
 ```
+
+Gradle provisions a toolchain if the one you ask for is not installed.
 
 ## Publishing
 

@@ -1,0 +1,24 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "${mod_license}"
+issueTrackerURL = "https://github.com/Delesk1JX/TextPlaceholderAPI-Forge/issues"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+authors = "${mod_authors}"
+description = '''
+${mod_description}
+'''
+logoFile = "icon.png"
+
+# Library mod: other mods depend on it, so do not make it require itself or block on game state.
+displayTest = "MATCH_VERSION"
+
+# TEMPORARY dev-only probe mod, removed before release.
+[[mods]]
+modId = "placeholderapi_selftest"
+version = "${mod_version}"
+displayName = "Placeholder API Self Test"
+description = "Dev-only smoke test, do not ship."

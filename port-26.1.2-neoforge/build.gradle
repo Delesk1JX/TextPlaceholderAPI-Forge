@@ -1,0 +1,147 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.148'
+    id 'me.modmuss50.mod-publish-plugin' version '2.2.1'
+}
+
+version = "${mod_version}+${minecraft_version}"
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
+    withSourcesJar()
+}
+
+neoForge {
+    version = neoforge_version
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+
+    runs {
+        configureEach {
+            gameDirectory = project.file('run')
+            systemProperty 'forge.logging.markers', ''
+            systemProperty 'forge.logging.console.level', 'info'
+        }
+
+        client {
+            client()
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    // FML, earlydisplay and neoform live on the NeoForged maven, not Maven Central.
+    maven { url = 'https://maven.neoforged.net/releases' }
+}
+
+dependencies {
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    def replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neoforge_version       : neoforge_version,
+            neoforge_version_range : neoforge_version_range,
+            mod_id                  : mod_id,
+            mod_name                : mod_name,
+            mod_license             : mod_license,
+            mod_version             : mod_version,
+            mod_authors             : mod_authors,
+            mod_description         : mod_description,
+            version                 : "${mod_version}+${minecraft_version}",
+    ]
+
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta', 'modrinth.toml']) {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+}
+
+jar {
+    manifest {
+        attributes([
+                'Specification-Title'     : mod_id,
+                'Specification-Vendor'    : mod_authors,
+                'Specification-Version'   : '1',
+                'Implementation-Title'    : project.name,
+                'Implementation-Version'  : project.jar.archiveVersion,
+                'Implementation-Vendor'   : mod_authors,
+                'Implementation-URL'      : 'https://github.com/Delesk1JX/TextPlaceholderAPI-Forge',
+        ])
+    }
+
+    from('LICENSE') {
+        rename { 'LICENSE_placeholder-api' }
+    }
+
+    from('src/main/resources/assets/icon.png') {
+        rename { 'icon.png' }
+    }
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifact(jar) { builtBy jar }
+            artifact(sourcesJar) { builtBy sourcesJar }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'localStaging'
+            url = layout.buildDirectory.dir('repo')
+        }
+    }
+}
+
+def changelog = System.getenv('CHANGELOG') ?: ''
+
+publishMods {
+    changelog = changelog
+    type = is_stable == 'true' && !mod_version.contains('-') ? STABLE : BETA
+    file = tasks.jar.archiveFile
+    modLoaders.add('neoforge')
+
+    if (System.getenv('CURSEFORGE_API_TOKEN') && project.curseforge_project_id) {
+        curseforge {
+            projectId = project.curseforge_project_id
+            accessToken = System.getenv('CURSEFORGE_API_TOKEN')
+            client = true
+            server = true
+            minecraftVersions.add(minecraft_version)
+        }
+    }
+
+    if (System.getenv('MODRINTH_API_TOKEN') && project.modrinth_project_id) {
+        modrinth {
+            projectId = project.modrinth_project_id
+            accessToken = System.getenv('MODRINTH_API_TOKEN')
+            minecraftVersions.add(minecraft_version)
+        }
+    }
+}

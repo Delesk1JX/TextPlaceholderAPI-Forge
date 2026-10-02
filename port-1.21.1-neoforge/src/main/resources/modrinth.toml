@@ -1,0 +1,45 @@
+# Modrinth project manifest, embedded in the jar so Modrinth can prefill metadata on import.
+# https://docs.modrinth.com/docs/publishing#modrinthtoml
+projectId = "LAI0rUqg"
+name = "Text Placeholder API (Unofficial NeoForge Port)"
+version = "${version}"
+summary = "Unofficial community port of Text Placeholder API to Forge 1.20.1. Not made or endorsed by the original author."
+license = "LGPL-3.0-only"
+description = """
+**This is an unofficial port.** It is not made, endorsed, or supported by the original author (Patbox). For the official Fabric version and canonical documentation, see <https://github.com/Patbox/TextPlaceholderAPI>.
+
+This is a community port of [Text Placeholder API](https://modrinth.com/mod/placeholder-api) from Fabric to **Minecraft 1.20.1 Forge**. It tracks the upstream `2.1.4` release. The `eu.pb4.placeholders` package, every public type and every placeholder id are unchanged, so mods written against the original library work on Forge without modification.
+
+Placeholder API is a small, JIJ-able API that allows creation and parsing of placeholders within strings and Minecraft text components. It uses a simple format of `%modid:type%` or `%modid:type data%`, and also includes a simplified text format for styling text in a readable way without writing JSON by hand.
+
+**For users** - it allows configuring multiple mods in a similar way without losing compatibility between them, and the Simplified Text Format allows styling text in a readable way.
+
+* [Using placeholders](https://placeholders.pb4.eu/user/general)
+* [Default placeholder list](https://placeholders.pb4.eu/user/default-placeholders)
+* [Mod placeholder list](https://placeholders.pb4.eu/user/mod-placeholders)
+* [Simplified Text Format](https://placeholders.pb4.eu/user/text-format)
+
+**For developers** - using Placeholder API is a simple way to achieve good mod compatibility without implementing multiple mod-specific APIs. The placeholder parsing system can also replace your own static or dynamic placeholders in text created by a player or read from a config.
+
+* [Getting started](https://placeholders.pb4.eu/dev/getting-started)
+* [Adding placeholders](https://placeholders.pb4.eu/dev/adding-placeholders)
+* [Parsing placeholders](https://placeholders.pb4.eu/dev/parsing-placeholders)
+* [TextNodes and NodeParsers](https://placeholders.pb4.eu/dev/text-nodes)
+
+*This is a library mod. Install it alongside any mod that consumes placeholders.*
+"""
+[[contact]]
+type = "source"
+link = "https://github.com/Delesk1JX/TextPlaceholderAPI-Forge"
+[[contact]]
+type = "issues"
+link = "https://github.com/Delesk1JX/TextPlaceholderAPI-Forge/issues"
+[[contact]]
+type = "homepage"
+link = "https://github.com/Delesk1JX/TextPlaceholderAPI-Forge"
+[[contact]]
+type = "discord"
+link = "https://pb4.eu/discord"
+[[donate]]
+type = "custom"
+link = "https://pb4.eu"

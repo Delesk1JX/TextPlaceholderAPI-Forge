@@ -1,0 +1,9 @@
+pluginManagement {
+    repositories {
+        maven { url = 'https://maven.neoforged.net/releases' }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'PlaceholderAPI-NeoForge-1.21.1'
